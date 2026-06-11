@@ -29,13 +29,13 @@ class ReportController extends ResourceController
             // 1. Statistiques globales
             $statsQuery = $this->db->table('invoices')
                 ->select('
-                COUNT(*) as total_invoices,
-                COALESCE(SUM(total_amount), 0) as total_revenue,
-                COALESCE(SUM(paid_amount), 0) as total_paid,
-                COALESCE(SUM(total_amount - paid_amount), 0) as total_remaining,
-                COALESCE(SUM(CASE WHEN payment_status = "overdue" THEN (total_amount - paid_amount) ELSE 0 END), 0) as overdue_payments,
-                COALESCE(SUM(CASE WHEN payment_status IN ("pending", "partial") THEN (total_amount - paid_amount) ELSE 0 END), 0) as pending_payments
-            ')
+        COUNT(*) as total_invoices,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(SUM(paid_amount), 0) as total_paid,
+        COALESCE(SUM(total_amount - paid_amount), 0) as total_remaining,
+        COALESCE(SUM(CASE WHEN payment_status = "pending" THEN (total_amount - paid_amount) ELSE 0 END), 0) as pending_payments,
+        COALESCE(SUM(CASE WHEN payment_status = "partial" THEN (total_amount - paid_amount) ELSE 0 END), 0) as partial_payments
+    ')
                 ->where('status !=', 'cancelled')
                 ->where('deleted_at IS NULL')
                 ->where('DATE(created_at) >=', $startDate)
