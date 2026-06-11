@@ -724,8 +724,8 @@ class ReportController extends ResourceController
 
             // 2. Créances
             $receivablesQuery = $this->db->table('invoices')
-                ->select('COALESCE(SUM(total_amount), 0) as total_receivables, COUNT(id) as invoice_count, COALESCE(AVG(total_amount), 0) as avg_receivable, COALESCE(SUM(CASE WHEN payment_status = "overdue" THEN total_amount ELSE 0 END), 0) as overdue_receivables, COUNT(CASE WHEN payment_status = "overdue" THEN 1 END) as overdue_invoices')
-                ->where('payment_status IN ("pending", "partial", "overdue")')
+                ->select("COALESCE(SUM(total_amount), 0) as total_receivables, COUNT(id) as invoice_count, COALESCE(AVG(total_amount), 0) as avg_receivable, COALESCE(SUM(CASE WHEN payment_status = 'overdue' THEN total_amount ELSE 0 END), 0) as overdue_receivables, COUNT(CASE WHEN payment_status = 'overdue' THEN 1 END) as overdue_invoices")
+                ->where("payment_status IN ('pending', 'partial', 'overdue')")
                 ->get();
 
             $data['RECEIVABLES'] = $receivablesQuery->getResultArray();
