@@ -558,7 +558,7 @@ class ReportController extends ResourceController
 
             // 5. MÉTHODES DE PAIEMENT
             $paymentMethodsQuery = $this->db->table('invoices')
-                ->select('COALESCE(payment_method, "Non spécifié") as payment_method, COUNT(*) as usage_count, COALESCE(SUM(total_amount), 0) as total_amount')
+                ->select('COALESCE(payment_method, "Non_specifie") as payment_method, COUNT(*) as usage_count, COALESCE(SUM(total_amount), 0) as total_amount')
                 ->where('DATE(created_at) >=', $startDate)
                 ->where('DATE(created_at) <=', $endDate)
                 ->where('payment_status !=', 'cancelled')
