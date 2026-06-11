@@ -742,7 +742,7 @@ class ReportController extends ResourceController
                     COUNT(id) as invoice_count,
                     COALESCE(SUM(total_amount), 0) as amount_due
                 ")
-                ->where('payment_status IN ("pending", "partial", "overdue")')
+                ->where("payment_status IN ('pending', 'partial', 'overdue')")
                 ->groupBy('aging_bucket')
                 ->get();
 
