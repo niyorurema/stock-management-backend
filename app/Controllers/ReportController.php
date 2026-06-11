@@ -27,23 +27,57 @@ class ReportController extends ResourceController
             $endDate = $this->request->getGet('end_date') ?? date('Y-m-t');
 
             // 1. Statistiques globales
-            $statsQuery = $this->db->table('invoices')
+            // D'abord, récupérer les totaux par statut
+            $statsByStatus = $this->db->table('invoices')
                 ->select('
-        COUNT(*) as total_invoices,
-        COALESCE(SUM(total_amount), 0) as total_revenue,
-        COALESCE(SUM(paid_amount), 0) as total_paid,
-        COALESCE(SUM(total_amount - paid_amount), 0) as total_remaining,
-        COALESCE(SUM(CASE WHEN payment_status = "pending" THEN (total_amount - paid_amount) ELSE 0 END), 0) as pending_payments,
-        COALESCE(SUM(CASE WHEN payment_status = "partial" THEN (total_amount - paid_amount) ELSE 0 END), 0) as partial_payments
+        payment_status,
+        COUNT(*) as count,
+        COALESCE(SUM(total_amount), 0) as total,
+        COALESCE(SUM(paid_amount), 0) as paid,
+        COALESCE(SUM(total_amount - paid_amount), 0) as due
     ')
                 ->where('status !=', 'cancelled')
                 ->where('deleted_at IS NULL')
                 ->where('DATE(created_at) >=', $startDate)
                 ->where('DATE(created_at) <=', $endDate)
-                ->get();
+                ->groupBy('payment_status')
+                ->get()
+                ->getResultArray();
 
+            // Calculer les totaux généraux
+            $totalInvoices = 0;
+            $totalRevenue = 0;
+            $totalPaid = 0;
+            $totalRemaining = 0;
+            $pendingPayments = 0;
+            $partialPayments = 0;
 
-            $stats = $statsQuery->getRowArray();
+            foreach ($statsByStatus as $stat) {
+                $totalInvoices += $stat['count'];
+                $totalRevenue += $stat['total'];
+                $totalPaid += $stat['paid'];
+                $totalRemaining += $stat['due'];
+
+                if ($stat['payment_status'] === 'pending') {
+                    $pendingPayments = $stat['due'];
+                }
+                if ($stat['payment_status'] === 'partial') {
+                    $partialPayments = $stat['due'];
+                }
+            }
+
+            // Construire le résultat
+            $statsResult = [
+                'total_invoices' => $totalInvoices,
+                'total_revenue' => $totalRevenue,
+                'total_paid' => $totalPaid,
+                'total_remaining' => $totalRemaining,
+                'pending_payments' => $pendingPayments,
+                'partial_payments' => $partialPayments
+            ];
+
+            $stats = $statsResult;
+            //$statsQuery->getRowArray();
 
             $dailySales = $this->db->table('invoices')
                 ->select("DATE(invoice_date) as sale_date, COUNT(*) as invoice_count, COALESCE(SUM(total_amount), 0) as daily_revenue")
